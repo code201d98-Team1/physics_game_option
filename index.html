@@ -6,56 +6,72 @@
     <title>My Ball Game</title>
 </head>
 
-<body style="background-color:white; font-family:verdana;" font-size="15px;" width="600px;"
-    margin="left:auto;" margin="right:auto;">
+<body style="background-color:white; font-family:verdana;" font-size="15px;" width="600px;" margin="left:auto;"
+    margin="right:auto;">
     <h1>My Ball Game</h1>
-    <div style="width:500px; margin-left:auto; margin-right:auto;">
-        <img src="castle.jpeg" width="500" height="500"
-            style="position:absolute;">
+    <div style="width:500px; margin-left:auto; margin-right:auto; position: relative;">
+        <div id="canvasExplosion" style="position:absolute;">
+            <img src="explosion.png" width="60" >
+        </div>
+        <div id="canvasObjectThrown" style="position:absolute;">
+            <img src="cute_Cat.png" width="60" style="-webkit-transform: scaleX(-1);transform: scaleX(-1);">
+        </div>
+        <img src="castle.jpeg" width="500" height="500" style="position:absolute;">
         <canvas id="theCanvas" width="500" height="500" style="position:relative;">
             Canvas not supported; please update your browser.
         </canvas>
     </div>
     <div style="text-align:center">
         <input type="button" value="Throw!" onclick="throwProjectile();">
-        p>
+        <p>
         <input type="range" id="speedSlider" min="0" max="80" step="1" value="30" oninput="showSpeed();"
             onchange="showSpeed();">
         Initial speed = <span id="speedReadout">30</span> m/s
-        <p>
+    </p><p>
             <input type="range" id="angleSlider" min="-90" max="90" step="1" value="10" oninput="showAngle();"
                 onchange="showAngle();">
             Initial angle = <span id="angleReadout">10</span>&deg;
-        <p>
+        </p><p>
             <input type="range" id="xSlider" min="0" max="250" step="1" value="10" oninput="showPosition();"
                 onchange="showPosition();">
             Initial horizontal position = <span id="xReadout">10</span>m
-        <p>
+        </p><p>
             <input type="range" id="heightSlider" min="0" max="450" step="1" value="300" oninput="showHeight();"
                 onchange="showHeight();">
             Initial vertical position from top = <span id="heightReadout">300</span>m
+        </p><p>
+            <input type="range" id="gravitySlider" min="-30" max="30" step="0.1" value="9.8" oninput="showGravity();"
+                onchange="showHeight();">
+            Initial vertical position from top = <span id="gravityReadout">9.8</span>m
+            
     </div>
     <p>This simulation demonstrates launching a projectile at various speeds and angles.</p>
     <script>
         // Write or Adjust your JavaScript code here.
-        var theCanvas = document.getElementById("theCanvas");
-        var theContext = theCanvas.getContext("2d");
-        var ay = 9.81;        // grav. constant in SI units
-        var dt = 0.2; // time step in seconds
-        var t = 0; // initial time
-        var timer, vel, yo, xo, a, angle, vx, vy, x, y;     // declare all motion variables
-        var speedSlider = document.getElementById("speedSlider");
-        var angleSlider = document.getElementById("angleSlider");
-        var heightSlider = document.getElementById("heightSlider");
-        var xSlider = document.getElementById("xSlider");
-        var speedReadout = document.getElementById("speedReadout");
-        var angleReadout = document.getElementById("angleReadout");
-        var heightReadout = document.getElementById("heightReadout");
-        var xReadout = document.getElementById("xReadout");
+        let theCanvas = document.getElementById("theCanvas");
+        let theContext = theCanvas.getContext("2d");
+        let canvasExplosion = document.getElementById("canvasExplosion");
+        let canvasObjectThrown = document.getElementById("canvasObjectThrown");
+        // let ay = 9.81;        // grav. constant in SI units
+        let dt = 0.2; // time step in seconds
+        let t = 0; // initial time
+        let timer, vel, yo, xo, a, angle, vx, vy, x, y;     // declare all motion variables
+        let speedSlider = document.getElementById("speedSlider");
+        let angleSlider = document.getElementById("angleSlider");
+        let heightSlider = document.getElementById("heightSlider");
+        let xSlider = document.getElementById("xSlider");
+        let gravitySlider = document.getElementById("gravitySlider");
+        let speedReadout = document.getElementById("speedReadout");
+        let angleReadout = document.getElementById("angleReadout");
+        let heightReadout = document.getElementById("heightReadout");
+        let xReadout = document.getElementById("xReadout");
+        let gravityReadout = document.getElementById("gravityReadout");
 
         moveProjectile();
 
         function throwProjectile() {
+            canvasExplosion.style = `position:absolute; z-index: -1;`
+            // canvasObjectThrown.style = `position:absolute; z-index: -1;`
             if (timer) {
                 window.clearTimeout(timer);
                 timer = null;
@@ -63,6 +79,7 @@
             x = 0;
             y = 0;
             t = 0;
+            ay = Number(gravitySlider.value); //ADDED GRAVITY SLIDER
             vel = Number(speedSlider.value);
             a = Number(angleSlider.value);
             angle = a * Math.PI / 180; // convert to radians
@@ -81,16 +98,37 @@
             theContext.arc(x, y, 15, 0, 2 * Math.PI);
             theContext.fillStyle = "rgb(200, 30, 200)";
             theContext.fill();
+            // theContext.moveTo(108+x, 0.0+y);
+            // theContext.lineTo(218, 78.3);
+            // theContext.lineTo(162, 131);
+            // theContext.lineTo(175, 205);
+            // theContext.lineTo(108, 170);
+            // theContext.lineTo(41.2, 205);
+            // theContext.lineTo(55, 131);
+            // theContext.lineTo(1, 78);
+            // theContext.lineTo(75, 68);
+            // theContext.lineTo(108, 0);
+            // theContext.closePath();
+            // theContext.fill();
         }
 
         function moveProjectile() {
-            if (y < 500) {
+
+            if ((y < 500 || y < 0) && x < 450) {
                 t += dt;
                 x = xo + vx * t;
-                y = yo - vy * t + .5 * ay * (t * t);
+                y = yo - vy * t + .5 * ay * (t * t); // yo = - .5 * ay * (t * t) + vy * t + y
                 drawProjectile();
                 if (timer) window.clearTimeout(timer);
                 timer = window.setTimeout(moveProjectile, 100 * dt);  // The number 100 can be increased for slow motion
+                canvasObjectThrown.style = `position:absolute; left: ${x-32}px; top: ${y-40}px; z-index: 1;`
+            }
+            else if (x >= 450) { // RIGHT BORDER
+                console.log('HIT'); // BOTTOM BORDER
+                canvasObjectThrown.style = `position:absolute; z-index: -1;`
+                canvasExplosion.style = `position:absolute; left: ${x-32}px; top: ${y-40}px; z-index: 1;`
+            } else if (y >= 500) {
+                console.log('Miss');
             }
         }
         function showSpeed() {
@@ -104,6 +142,9 @@
         }
         function showPosition() {
             xReadout.innerHTML = xSlider.value;
+        }
+        function showGravity() {
+            gravityReadout.innerHTML = gravitySlider.value;
         }
     </script>
 </body>
